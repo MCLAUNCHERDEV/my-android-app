@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VENSIX - Aim Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #ff0050;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #fff, #ff0050);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .creator {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .id {
+            font-size: 10px;
+            color: #ff0050;
+            margin-top: 5px;
+        }
+
+        /* Menu Tab */
+        .tab-bar {
+            display: flex;
+            background: #111;
+            padding: 10px;
+            gap: 5px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+        .tab.active {
+            background: #ff0050;
+            color: #fff;
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card */
+        .card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #333;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #ff0050;
+        }
+
+        /* Slider */
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #333;
+            border-radius: 2px;
+        }
+
+        input[type="range"]:focus {
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff0050;
+            cursor: pointer;
+        }
+
+        /* Button */
+        .btn {
+            background: #ff0050;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            background: #333;
+        }
+
+        /* Coordinate Controls */
+        .coord-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .coord-value {
+            background: #333;
+            padding: 8px 16px;
+            border-radius: 8px;
+            width: 60px;
+            text-align: center;
+        }
+
+        .coord-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .coord-btn {
+            background: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff0050;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Overlay Request */
+        .overlay-request {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .overlay-request.hide {
+            display: none;
+        }
+
+        /* Crosshair Overlay */
+        .crosshair-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+        }
+
+        .crosshair-overlay.active {
+            display: block;
+        }
+
+        .crosshair-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .crosshair-circle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .crosshair-plus {
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+
+        .crosshair-plus::before,
+        .crosshair-plus::after {
+            content: '';
+            position: absolute;
+            background: red;
+        }
+
+        .crosshair-plus::before {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .crosshair-plus::after {
+            width: 2px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            padding: 10px 20px;
+            border-radius: 40px;
+            z-index: 1100;
+            display: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Overlay Permission Request -->
+<div class="overlay-request" id="overlayRequest">
+    <div class="card" style="text-align: center;">
+        <h2 style="color: #ff0050;">🎯 IZINKAN OVERLAY</h2>
+        <p style="margin: 16px 0;">VENSIX membutuhkan izin overlay untuk menampilkan crosshair di atas game.</p>
+        <button class="btn" id="requestOverlayBtn">IZINKAN OVERLAY</button>
+        <button class="btn btn-secondary" id="continueWithoutBtn" style="margin-top: 10px;">Lanjut Tanpa Crosshair</button>
+    </div>
+</div>
+
+<!-- Crosshair Overlay -->
+<div class="crosshair-overlay" id="crosshairOverlay">
+    <div class="crosshair-dot" id="crosshairDot"></div>
+</div>
+
+<!-- Main App -->
+<div class="header">
+    <div class="logo">VENSIX</div>
+    <div class="creator">By RianModss</div>
+    <div class="id">ID-116553</div>
+</div>
+
+<div class="tab-bar">
+    <div class="tab active" data-page="main">🎯 AIM</div>
+    <div class="tab" data-page="tools">⚙️ TOOLS</div>
+    <div class="tab" data-page="monitor">📊 MONITOR</div>
+    <div class="tab" data-page="settings">🔧 SETTINGS</div>
+</div>
+
+<div class="content">
+    <!-- PAGE MAIN (Crosshair) -->
+    <div class="page active" id="page-main">
+        <div class="card">
+            <div class="card-title">🎯 Crosshair Aim-Assistant</div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>SIZE</span>
+                    <span id="sizeValue">40%</span>
+                </div>
+                <input type="range" id="sizeSlider" min="10" max="100" value="40">
+                <button class="btn btn-secondary" id="resetSizeBtn" style="margin-top: 10px;">Reset Size</button>
+            </div>
+            <div class="coord-control">
+                <span>POSITION X</span>
+                <div class="coord-value" id="posXValue">0</div>
+                <div class="coord-buttons">
+                    <button class="coord-btn" onclick="moveX(-5)">←</button>
+                    <button class="coord-btn" onclick="moveX(5)">→</button>
+                </div>
+            </div>
+            <div class="coord-control">
+                <span>POSITION Y</span>
+                <div class="coord-value" id="posYValue">0</div>
+                <div class="coord-buttons">
+                    <button class="coord-btn" onclick="moveY(-5)">↓</button>
+                    <button class="coord-btn" onclick="moveY(5)">↑</button>
+                </div>
+            </div>
+            <button class="btn" id="resetPosBtn">Reset X & Y</button>
+            <div style="margin-top: 16px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="crosshairToggle"> Aktifkan Crosshair
+                </label>
+            </div>
+            <div style="margin-top: 16px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="radio" name="crosshairStyle" value="dot" checked> Dot
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 8px;">
+                    <input type="radio" name="crosshairStyle" value="circle"> Circle
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 8px;">
+                    <input type="radio" name="crosshairStyle" value="plus"> Plus
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE TOOLS -->
+    <div class="page" id="page-tools">
+        <div class="card">
+            <div class="card-title">⚡ Smart Switch DPI & PPI</div>
+            <button class="btn" id="switchDPI">Switch DPI ke 320</button>
+            <button class="btn btn-secondary" id="resetDPI" style="margin-top: 8px;">Reset DPI</button>
+        </div>
+        <div class="card">
+            <div class="card-title">🎮 Sensitivity GameLab</div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Sensitivity (%)</span>
+                    <span id="sensValue">100%</span>
+                </div>
+                <input type="range" id="sensSlider" min="0" max="200" value="100">
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">🗑️ Quick Cache Cleaner</div>
+            <button class="btn" id="cleanCacheBtn">Bersihkan Cache</button>
+        </div>
+        <div class="card">
+            <div class="card-title">📋 Task Manager</div>
+            <div id="taskList" style="max-height: 200px; overflow-y: auto;">
+                <div style="color: #888;">Loading proses...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE MONITOR -->
+    <div class="page" id="page-monitor">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="cpuValue">0%</div>
+                <div class="stat-label">CPU Usage</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="ramValue">0 MB</div>
+                <div class="stat-label">RAM Usage</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="fpsValue">0</div>
+                <div class="stat-label">FPS (Emulator)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="tempValue">0°C</div>
+                <div class="stat-label">Device Temp</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">📊 ROG Monitoring Style</div>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Refresh Rate</span>
+                    <span id="refreshValue">60Hz</span>
+                </div>
+                <input type="range" id="refreshSlider" min="60" max="120" value="60" step="1">
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE SETTINGS -->
+    <div class="page" id="page-settings">
+        <div class="card">
+            <div class="card-title">ℹ️ Tentang VENSIX</div>
+            <p style="font-size: 14px; line-height: 1.6;">Versi: 2.2.0<br>By: RianModss<br>ID: 116553<br><br>Join Saluran WhatsApp<br>Ikuti TikTok Resmi<br>Join Discord Server</p>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // Crosshair state
+    let crosshairActive = false;
+    let crosshairX = window.innerWidth / 2;
+    let crosshairY = window.innerHeight / 2;
+    let crosshairSize = 40;
+    let crosshairStyle = 'dot';
+    let overlayGranted = false;
+
+    // DOM Elements
+    const crosshairOverlay = document.getElementById('crosshairOverlay');
+    const crosshairDot = document.getElementById('crosshairDot');
+    const sizeSlider = document.getElementById('sizeSlider');
+    const sizeValue = document.getElementById('sizeValue');
+    const posXValue = document.getElementById('posXValue');
+    const posYValue = document.getElementById('posYValue');
+    const crosshairToggle = document.getElementById('crosshairToggle');
+    const overlayRequest = document.getElementById('overlayRequest');
+    const requestOverlayBtn = document.getElementById('requestOverlayBtn');
+    const continueWithoutBtn = document.getElementById('continueWithoutBtn');
+
+    // Check if overlay permission is needed
+    function checkOverlayPermission() {
+        // Di browser, overlay permission tidak ada, jadi kita anggap granted
+        // Tapi di Android WebView, kita bisa request
+        if (window.Android && window.Android.checkOverlayPermission) {
+            if (!window.Android.checkOverlayPermission()) {
+                overlayRequest.classList.remove('hide');
+                return false;
+            }
+        }
+        overlayRequest.classList.add('hide');
+        overlayGranted = true;
+        return true;
+    }
+
+    requestOverlayBtn.addEventListener('click', () => {
+        if (window.Android && window.Android.requestOverlayPermission) {
+            window.Android.requestOverlayPermission();
+        } else {
+            // Fallback: simulate granted
+            showToast('Overlay diizinkan (simulasi browser)');
+            overlayRequest.classList.add('hide');
+            overlayGranted = true;
+        }
+    });
+
+    continueWithoutBtn.addEventListener('click', () => {
+        overlayRequest.classList.add('hide');
+        overlayGranted = false;
+        showToast('Crosshair dinonaktifkan');
+    });
+
+    // Update crosshair position and style
+    function updateCrosshair() {
+        if (!crosshairActive || !overlayGranted) {
+            crosshairOverlay.classList.remove('active');
+            return;
+        }
+
+        crosshairOverlay.classList.add('active');
+        
+        // Clear previous content
+        crosshairOverlay.innerHTML = '';
+        
+        const element = document.createElement('div');
+        element.style.position = 'absolute';
+        element.style.left = crosshairX + 'px';
+        element.style.top = crosshairY + 'px';
+        element.style.transform = 'translate(-50%, -50%)';
+        
+        if (crosshairStyle === 'dot') {
+            element.style.width = Math.max(4, crosshairSize / 10) + 'px';
+            element.style.height = Math.max(4, crosshairSize / 10) + 'px';
+            element.style.background = 'red';
+            element.style.borderRadius = '50%';
+        } else if (crosshairStyle === 'circle') {
+            element.style.width = crosshairSize + 'px';
+            element.style.height = crosshairSize + 'px';
+            element.style.border = '2px solid red';
+            element.style.borderRadius = '50%';
+        } else if (crosshairStyle === 'plus') {
+            element.style.width = crosshairSize + 'px';
+            element.style.height = crosshairSize + 'px';
+            element.style.position = 'relative';
+            
+            const horizontal = document.createElement('div');
+            horizontal.style.position = 'absolute';
+            horizontal.style.width = crosshairSize + 'px';
+            horizontal.style.height = '2px';
+            horizontal.style.background = 'red';
+            horizontal.style.top = '50%';
+            horizontal.style.left = '0';
+            horizontal.style.transform = 'translateY(-50%)';
+            
+            const vertical = document.createElement('div');
+            vertical.style.position = 'absolute';
+            vertical.style.width = '2px';
+            vertical.style.height = crosshairSize + 'px';
+            vertical.style.background = 'red';
+            vertical.style.left = '50%';
+            vertical.style.top = '0';
+            vertical.style.transform = 'translateX(-50%)';
+            
+            element.appendChild(horizontal);
+            element.appendChild(vertical);
+        }
+        
+        crosshairOverlay.appendChild(element);
+    }
+
+    // Event listeners for crosshair controls
+    sizeSlider.addEventListener('input', (e) => {
+        crosshairSize = parseInt(e.target.value);
+        sizeValue.innerText = crosshairSize + '%';
+        updateCrosshair();
+    });
+
+    document.getElementById('resetSizeBtn').addEventListener('click', () => {
+        crosshairSize = 40;
+        sizeSlider.value = 40;
+        sizeValue.innerText = '40%';
+        updateCrosshair();
+    });
+
+    function moveX(delta) {
+        crosshairX += delta;
+        crosshairX = Math.min(Math.max(crosshairX, 50), window.innerWidth - 50);
+        posXValue.innerText = Math.round(crosshairX - window.innerWidth/2);
+        updateCrosshair();
+    }
+
+    function moveY(delta) {
+        crosshairY += delta;
+        crosshairY = Math.min(Math.max(crosshairY, 50), window.innerHeight - 50);
+        posYValue.innerText = Math.round(crosshairY - window.innerHeight/2);
+        updateCrosshair();
+    }
+
+    window.moveX = moveX;
+    window.moveY = moveY;
+
+    document.getElementById('resetPosBtn').addEventListener('click', () => {
+        crosshairX = window.innerWidth / 2;
+        crosshairY = window.innerHeight / 2;
+        posXValue.innerText = '0';
+        posYValue.innerText = '0';
+        updateCrosshair();
+    });
+
+    crosshairToggle.addEventListener('change', (e) => {
+        crosshairActive = e.target.checked;
+        updateCrosshair();
+    });
+
+    document.querySelectorAll('input[name="crosshairStyle"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                crosshairStyle = e.target.value;
+                updateCrosshair();
+            }
+        });
+    });
+
+    // Tools
+    document.getElementById('switchDPI').addEventListener('click', () => {
+        showToast('
